@@ -26,6 +26,7 @@ export default {
 
 .popup {
   top: 50px;
+  width: 400px;
   height: 500px;
   padding: 20px;
   left: 50%;

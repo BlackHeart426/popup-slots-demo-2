@@ -1,18 +1,19 @@
 <template>
   <app-popup v-if="isOpen" @close="close">
     <h1>
-      Вы действительно хотите освоить правильные подходы к проектированию систем
-      во Vue?
+      Select user
     </h1>
     <hr/>
     <div class="description">
-      <slot name="description"></slot>
+     You need select user from list
     </div>
     <hr/>
     <div class="content">
-      <div v-if="listUser.length > 0">
+      <div v-if="listUser.length > 0 && !isLoading">
         <card-user v-for="user of listUser" :key="user.id" :user="user"></card-user>
       </div>
+      <div v-else-if="isLoading">Loading...</div>
+      <div v-else>Data not found</div>
     </div>
     <hr/>
     <div class="footer">
@@ -28,9 +29,10 @@
 <script>
 import {getUserList} from "@/api";
 import AppPopup from "@/components/AppPopup";
+import CardUser from "@/components/CardUser";
 
 export default {
-  components: {AppPopup},
+  components: {AppPopup, CardUser},
 
   currentPopupController: null,
 
@@ -49,17 +51,6 @@ export default {
     return popupPromise;
   },
 
-  created() {
-    this.isLoading = true;
-
-    getUserList(0, 30)
-        .then((response) => response.json())
-        .then((response) => this.listUser = response)
-        .finally(() => this.isLoading = false)
-        .then((json) => console.log(json));
-  },
-
-
   data() {
     return {
       title: "Select user",
@@ -72,6 +63,8 @@ export default {
 
   mounted() {
     document.addEventListener("keydown", this.handleKeydown);
+
+
   },
   beforeUnmount() {
     document.removeEventListener("keydown", this.handleKeydown);
@@ -91,6 +84,14 @@ export default {
 
       this.$options.currentPopupController = { resolve, reject };
       this.isOpen = true;
+
+      this.isLoading = true;
+
+      getUserList(0, 30)
+          .then((response) => response.json())
+          .then((response) => this.listUser = response)
+          .finally(() => this.isLoading = false)
+          .then((json) => console.log(json));
 
       return popupPromise;
     },
@@ -123,10 +124,11 @@ export default {
 
 .content {
   overflow: auto;
-  height: 360px;
+  height: 320px;
 }
 
 .footer {
+  padding: 20px;
   text-align: right;
 }
 </style>
