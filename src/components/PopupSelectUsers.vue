@@ -1,35 +1,71 @@
 <template>
-  <div v-if="isOpen" class="backdrop" @click="close">
-    <div class="popup" @click.stop>
-      <h1> <slot name="title"></slot></h1>
-      <hr />
-      <div class="description">
-        <slot name="description"></slot>
-      </div>
-      <hr/>
-      <div class="content">
-        <slot name="list-user"></slot>
-      </div>
-      <hr/>
-      <div class="footer">
-        <slot name="actions" :close="close" :confirm="confirm">
-          <button @click="close">Cancel</button>
-          &nbsp;
-          <button @click="confirm">Accept</button>
-        </slot>
+  <app-popup v-if="isOpen" @close="close">
+    <h1>
+      Вы действительно хотите освоить правильные подходы к проектированию систем
+      во Vue?
+    </h1>
+    <hr/>
+    <div class="description">
+      <slot name="description"></slot>
+    </div>
+    <hr/>
+    <div class="content">
+      <div v-if="listUser.length > 0">
+        <card-user v-for="user of listUser" :key="user.id" :user="user"></card-user>
       </div>
     </div>
-  </div>
+    <hr/>
+    <div class="footer">
+      <slot name="actions" :close="close" :confirm="confirm">
+        <button @click="close">Cancel</button>
+        &nbsp;
+        <button @click="confirm">Accept</button>
+      </slot>
+    </div>
+  </app-popup>
 </template>
 
 <script>
+import {getUserList} from "@/api";
+import AppPopup from "@/components/AppPopup";
+
 export default {
+  components: {AppPopup},
+
   currentPopupController: null,
+
+  open() {
+    let resolve;
+    let reject;
+
+    const popupPromise = new Promise((ok, fail) => {
+      resolve = ok;
+      reject = fail;
+    });
+
+    this.$options.currentPopupController = { resolve, reject };
+    this.isOpen = true;
+
+    return popupPromise;
+  },
+
+  created() {
+    this.isLoading = true;
+
+    getUserList(0, 30)
+        .then((response) => response.json())
+        .then((response) => this.listUser = response)
+        .finally(() => this.isLoading = false)
+        .then((json) => console.log(json));
+  },
+
 
   data() {
     return {
+      title: "Select user",
+      listUser: [],
       isOpen: false,
-      title: "Select user"
+      isLoading: Boolean,
     };
   },
 
@@ -42,15 +78,7 @@ export default {
   },
 
   methods: {
-    handleKeydown(e) {
-      if (this.isOpen && e.key === "Escape") {
-        this.close();
-      }
-
-      if (this.isOpen && e.key === "Enter") {
-        this.confirm();
-      }
-    },
+    currentPopupController: null,
 
     open() {
       let resolve;
@@ -67,6 +95,17 @@ export default {
       return popupPromise;
     },
 
+    handleKeydown(e) {
+      if (this.isOpen && e.key === "Escape") {
+        this.close();
+      }
+
+      if (this.isOpen && e.key === "Enter") {
+        this.confirm();
+      }
+    },
+
+
     confirm() {
       this.$options.currentPopupController.resolve(true);
       this.isOpen = false;
@@ -81,36 +120,10 @@ export default {
 </script>
 
 <style>
-.popup {
-  top: 50px;
-  height: 500px;
-  padding: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  position: fixed;
-  z-index: 101;
-  background-color: white;
-  border-radius: 10px;
-}
 
 .content {
   overflow: auto;
   height: 360px;
-}
-
-.popup h1 {
-  text-align: center;
-  margin: 0;
-}
-
-.backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 100;
 }
 
 .footer {
