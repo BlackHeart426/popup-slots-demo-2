@@ -10,7 +10,12 @@
     <hr/>
     <div class="content">
       <div v-if="listUser.length > 0 && !isLoading">
-        <card-user v-for="user of listUser" :key="user.id" :user="user"></card-user>
+        <card-user
+            @on-select-user="onChangeSelectUser"
+            v-for="user of listUser"
+            :key="user.id"
+            :is-active="user.isActive"
+            :user="user"></card-user>
       </div>
       <div v-else-if="isLoading">Loading...</div>
       <div v-else>Data not found</div>
@@ -36,6 +41,10 @@ export default {
 
   currentPopupController: null,
 
+  props: {
+    oldSelectedUserList: []
+  },
+
   open() {
     let resolve;
     let reject;
@@ -54,9 +63,13 @@ export default {
   data() {
     return {
       title: "Select user",
-      listUser: [],
+      listUser: [
+        { id: 1, title: 'first'},
+        { id: 2, title: 'second'}
+      ],
       isOpen: false,
       isLoading: Boolean,
+      selectedUserList: [],
     };
   },
 
@@ -72,6 +85,21 @@ export default {
 
   methods: {
     currentPopupController: null,
+
+    getIsActive(id) {
+      console.log(this.oldSelectedUserList)
+      console.log(id)
+      console.log('iu',this.oldSelectedUserList.includes(id))
+      return !!this.oldSelectedUserList.includes(id)
+    },
+
+    onChangeSelectUser(id) {
+      if (this.selectedUserList.includes(id)) {
+        this.selectedUserList = [...this.selectedUserList.filter(user => user !== id)];
+      } else {
+        this.selectedUserList = [...this.selectedUserList, id]
+      }
+    },
 
     open() {
       let resolve;
@@ -92,6 +120,12 @@ export default {
           .then((response) => this.listUser = response)
           .finally(() => this.isLoading = false)
           .then((json) => console.log(json));
+
+      this.listUser.map(user => {
+        return user.isActive = this.getIsActive(user.id)
+      })
+
+      console.log('this.listUser',this.listUser)
 
       return popupPromise;
     },
