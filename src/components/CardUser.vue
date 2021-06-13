@@ -2,7 +2,7 @@
   <div
       class="user"
       :class="{
-        ['active'] : getIsActive
+        ['active'] : isActive
       }"
       @click="onToggleSelect()">
     {{user.id}} - {{ user.title }}</div>
@@ -13,28 +13,24 @@ export default {
   name: "CardUser",
 
   props: {
-    user: { id: Number, title: String },
-    isActive: Boolean,
+    user: { id: Number, title: String, isActive: Boolean },
   },
 
   data () {
     return {
-      newIsActive: false,
+      isActive: false,
     }
   },
 
   emits: ['on-select-user'],
 
+  mounted() {
+    this.isActive = this.user.isActive;
+  },
   methods: {
-
-    getIsActive() {
-      return this.newIsActive;
-    },
-
     onToggleSelect() {
-      console.log( this.isActive)
 
-      this.newIsActive = !this.newIsActive;
+      this.isActive = !this.isActive;
       this.$emit('on-select-user', this.user.id);
     },
   }
@@ -51,7 +47,7 @@ export default {
   background: aliceblue;
 }
 
-.user.active {
+.user.active  {
   background: bisque;
 }
 </style>

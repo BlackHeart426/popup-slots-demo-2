@@ -14,7 +14,6 @@
             @on-select-user="onChangeSelectUser"
             v-for="user of listUser"
             :key="user.id"
-            :is-active="user.isActive"
             :user="user"></card-user>
       </div>
       <div v-else-if="isLoading">Loading...</div>
@@ -87,9 +86,9 @@ export default {
     currentPopupController: null,
 
     getIsActive(id) {
-      console.log(this.oldSelectedUserList)
-      console.log(id)
-      console.log('iu',this.oldSelectedUserList.includes(id))
+      // console.log(this.oldSelectedUserList)
+      // console.log(id)
+      // console.log('iu',this.oldSelectedUserList.includes(id))
       return !!this.oldSelectedUserList.includes(id)
     },
 
@@ -115,17 +114,16 @@ export default {
 
       this.isLoading = true;
 
-      getUserList(0, 30)
+      getUserList(0, 3)
           .then((response) => response.json())
-          .then((response) => this.listUser = response)
+          .then((response) => {
+                this.listUser = response.map(user => {
+                  console.log('user', user)
+                   user.isActive = this.getIsActive(user.id)
+                return user})})
           .finally(() => this.isLoading = false)
-          .then((json) => console.log(json));
 
-      this.listUser.map(user => {
-        return user.isActive = this.getIsActive(user.id)
-      })
-
-      console.log('this.listUser',this.listUser)
+      console.log('this.listUser', this.listUser)
 
       return popupPromise;
     },
