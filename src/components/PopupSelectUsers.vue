@@ -8,16 +8,21 @@
      You need select user from list
     </div>
     <hr/>
+    <div class="search">
+      <input v-model="searchQuery" placeholder="Поиск">
+    </div>
+    <hr/>
     <div class="content">
       <div v-if="listUser.length > 0 && !isLoading">
         <card-user
             @on-select-user="onChangeSelectUser"
-            v-for="user of listUser"
+            v-for="user of filteredListUser"
             :key="user.id"
             :user="user"></card-user>
       </div>
       <div v-else-if="isLoading">Loading...</div>
       <div v-else>Data not found</div>
+      <div>  <button @click="getMoreUser">Cancel</button> </div>
     </div>
     <hr/>
     <div class="footer">
@@ -62,6 +67,7 @@ export default {
   data() {
     return {
       title: "Select user",
+      searchQuery: '',
       listUser: [
         { id: 1, title: 'first'},
         { id: 2, title: 'second'}
@@ -75,20 +81,29 @@ export default {
 
   mounted() {
     document.addEventListener("keydown", this.handleKeydown);
-
-
   },
+
   beforeUnmount() {
     document.removeEventListener("keydown", this.handleKeydown);
+  },
+
+  watch: {
+    searchQuery(newValue) {
+      console.log(newValue)
+    }
+  },
+
+  computed: {
+
+    filteredListUser() {
+      return this.listUser.filter(ticker => ticker.title.includes(this.searchQuery));
+    },
   },
 
   methods: {
     currentPopupController: null,
 
     getIsActive(id) {
-      // console.log(this.oldSelectedUserList)
-      // console.log(id)
-      // console.log('iu',this.oldSelectedUserList.includes(id))
       return !!this.oldSelectedUserList.includes(id)
     },
 
@@ -114,16 +129,13 @@ export default {
 
       this.isLoading = true;
 
-      getUserList(0, 3)
+      getUserList(0, 10)
           .then((response) => response.json())
           .then((response) => {
                 this.listUser = response.map(user => {
-                  console.log('user', user)
                    user.isActive = this.getIsActive(user.id)
                 return user})})
           .finally(() => this.isLoading = false)
-
-      console.log('this.listUser', this.listUser)
 
       return popupPromise;
     },
@@ -138,6 +150,9 @@ export default {
       }
     },
 
+    getMoreUser() {
+
+    },
 
     confirm() {
       this.$options.currentPopupController.resolve(true);
@@ -156,7 +171,7 @@ export default {
 
 .content {
   overflow: auto;
-  height: 320px;
+  height: 280px;
 }
 
 .footer {
